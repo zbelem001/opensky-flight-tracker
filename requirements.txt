@@ -1,0 +1,16 @@
+# Kafka
+kafka-python-ng==2.2.2
+
+# Spark
+pyspark==3.5.0
+
+# API et requêtes HTTP
+requests==2.31.0
+
+# Dashboard
+streamlit==1.29.0
+plotly==5.18.0
+pandas==2.1.4
+
+# Utilitaires
+python-dateutil==2.8.2
