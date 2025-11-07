@@ -7,6 +7,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 import logging
+import os
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -144,15 +145,17 @@ class FlightStreamProcessor:
         """Écrit les données dans des fichiers Parquet pour partage avec Streamlit"""
         # Utiliser /data/flights_data dans Docker, /tmp/flights_data en local
         if path is None:
-            import os
             path = os.getenv('FLIGHTS_DATA_PATH', '/tmp/flights_data')
+        
+        # Utiliser /data/checkpoint dans Docker
+        checkpoint_path = os.getenv('CHECKPOINT_PATH', f"/data/checkpoint/{path.split('/')[-1]}")
         
         query = df \
             .writeStream \
             .outputMode("append") \
             .format("parquet") \
             .option("path", path) \
-            .option("checkpointLocation", f"/tmp/checkpoint/{path.split('/')[-1]}") \
+            .option("checkpointLocation", checkpoint_path) \
             .start()
         
         return query
@@ -215,7 +218,6 @@ class FlightStreamProcessor:
 
 if __name__ == "__main__":
     # Lire les variables d'environnement
-    import os
     bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
     topic = os.getenv('KAFKA_TOPIC', 'flights-data')
     
