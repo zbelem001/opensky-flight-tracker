@@ -1,0 +1,28 @@
+# Dockerfile pour le Dashboard Streamlit
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Copier les fichiers de requirements
+COPY requirements.txt .
+
+# Installer les dépendances
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copier le code source
+COPY dashboard.py .
+
+# Créer le répertoire de données
+RUN mkdir -p /data/flights_data
+
+# Exposer le port Streamlit
+EXPOSE 8501
+
+# Variables d'environnement Streamlit
+ENV STREAMLIT_SERVER_PORT=8501
+ENV STREAMLIT_SERVER_ADDRESS=0.0.0.0
+ENV STREAMLIT_SERVER_HEADLESS=true
+ENV FLIGHTS_DATA_PATH=/data/flights_data
+
+# Commande de démarrage
+CMD ["streamlit", "run", "dashboard.py"]

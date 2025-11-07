@@ -61,10 +61,9 @@ services:
     restart: unless-stopped
 
   # Producer - Récupère les données OpenSky et les envoie à Kafka
+  # Utilise l'image pré-construite depuis Docker Hub
   producer:
-    build:
-      context: .
-      dockerfile: Dockerfile.producer
+    image: zbelem001/opensky-producer:latest
     container_name: opensky-producer
     depends_on:
       kafka:
@@ -78,10 +77,9 @@ services:
     restart: unless-stopped
 
   # Spark Consumer - Traite les données en streaming
+  # Utilise l'image pré-construite depuis Docker Hub
   spark-consumer:
-    build:
-      context: .
-      dockerfile: Dockerfile.spark
+    image: zbelem001/opensky-spark:latest
     container_name: opensky-spark
     depends_on:
       kafka:
@@ -97,10 +95,9 @@ services:
     restart: unless-stopped
 
   # Dashboard Streamlit - Visualisation des données
+  # Utilise l'image pré-construite depuis Docker Hub
   dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.dashboard
+    image: zbelem001/opensky-dashboard:latest
     container_name: opensky-dashboard
     depends_on:
       - spark-consumer

@@ -140,8 +140,13 @@ class FlightStreamProcessor:
         
         return query
     
-    def write_to_parquet(self, df, path="/tmp/flights_data"):
+    def write_to_parquet(self, df, path=None):
         """Écrit les données dans des fichiers Parquet pour partage avec Streamlit"""
+        # Utiliser /data/flights_data dans Docker, /tmp/flights_data en local
+        if path is None:
+            import os
+            path = os.getenv('FLIGHTS_DATA_PATH', '/tmp/flights_data')
+        
         query = df \
             .writeStream \
             .outputMode("append") \
@@ -192,7 +197,7 @@ class FlightStreamProcessor:
         query1 = self.write_to_console(flights_df, "raw_flights")
         query2 = self.write_to_memory(flights_df, "flights_table")
         query3 = self.write_statistics_to_memory(stats_df)
-        query4 = self.write_to_parquet(flights_df, "/tmp/flights_data")
+        query4 = self.write_to_parquet(flights_df)  # Utilise la variable d'environnement
         # Note: Les statistiques ne sont pas écrites en Parquet car le mode "complete" n'est pas supporté
         
         logger.info("Streaming démarré. Appuyez sur Ctrl+C pour arrêter.")
@@ -209,5 +214,40 @@ class FlightStreamProcessor:
             self.spark.stop()
 
 if __name__ == "__main__":
+    # Lire les variables d'environnement
+    import os
+    bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
+    topic = os.getenv('KAFKA_TOPIC', 'flights-data')
+    
     processor = FlightStreamProcessor()
-    processor.run()
+    
+    # Lancer le traitement avec les bons paramètres
+    logger.info(f"Démarrage du consumer Spark avec Kafka: {bootstrap_servers}, topic: {topic}")
+    
+    # Lecture depuis Kafka avec les paramètres corrects
+    raw_stream = processor.read_from_kafka(topic=topic, bootstrap_servers=bootstrap_servers)
+    
+    # Traitement
+    flights_df = processor.process_stream(raw_stream)
+    
+    # Statistiques
+    stats_df = processor.compute_statistics(flights_df)
+    
+    # Écriture des résultats
+    query1 = processor.write_to_console(flights_df, "raw_flights")
+    query2 = processor.write_to_memory(flights_df, "flights_table")
+    query3 = processor.write_statistics_to_memory(stats_df)
+    query4 = processor.write_to_parquet(flights_df)
+    
+    logger.info("Streaming démarré. Appuyez sur Ctrl+C pour arrêter.")
+    
+    # Attend la fin
+    try:
+        query1.awaitTermination()
+    except KeyboardInterrupt:
+        logger.info("Arrêt du streaming...")
+        query1.stop()
+        query2.stop()
+        query3.stop()
+        query4.stop()
+        processor.spark.stop()

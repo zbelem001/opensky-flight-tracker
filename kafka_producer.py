@@ -6,6 +6,7 @@ Récupère les données des vols autour de l'aéroport de Ouagadougou
 import json
 import time
 import requests
+import os
 from kafka import KafkaProducer
 from datetime import datetime
 import logging
@@ -157,8 +158,13 @@ class OpenSkyProducer:
             self.producer.close()
 
 if __name__ == "__main__":
+    # Lire les variables d'environnement
+    bootstrap_servers = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092').split(',')
+    topic = os.getenv('KAFKA_TOPIC', 'flights-data')
+    interval = int(os.getenv('FETCH_INTERVAL', '30'))
+    
     producer = OpenSkyProducer(
-        bootstrap_servers=['localhost:9092'],
-        topic='flights-data'
+        bootstrap_servers=bootstrap_servers,
+        topic=topic
     )
-    producer.run(interval=30)
+    producer.run(interval=interval)

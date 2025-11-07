@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Logs et données temporaires
+*.log
+/tmp/
+*.tmp
+.DS_Store
+
+# Checkpoints Spark
+/tmp/checkpoint/
+
+# Données de vols locales
+/tmp/flights_data/
+
+# Scripts shell locaux
+start.sh
+run_spark.sh
+check.sh
+MIGRATION.sh

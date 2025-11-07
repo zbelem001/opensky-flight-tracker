@@ -27,11 +27,80 @@ OpenSky API → Kafka Producer → Kafka Topic → Spark Streaming → Fichiers 
 
 ## 🚀 Installation & Démarrage
 
-### 1. Préparer l'environnement
+### Option 1 : Docker Hub - Démarrage Ultra-Rapide ⚡ (Recommandé)
+
+**Images pré-construites - Prêt en 30 secondes !**
 
 ```bash
 # Cloner le projet
-git clone <votre-repo>
+git clone https://github.com/zbelem001/opensky-flight-tracker.git
+cd opensky-flight-tracker
+
+# Démarrer avec les images Docker Hub (pas de build nécessaire !)
+docker-compose -f docker-compose.hub.yml up -d
+```
+
+✅ **Avantages** :
+- Pas de build (gain de 5-10 minutes)
+- Images testées et validées
+- Fonctionne immédiatement
+
+📖 **Guide rapide** : [QUICKSTART_PROFESSOR.md](QUICKSTART_PROFESSOR.md)
+
+---
+
+### Option 2 : Avec Docker - Build local 🐳
+
+**Si vous voulez construire les images vous-même**
+
+```bash
+# Cloner le projet
+git clone https://github.com/zbelem001/opensky-flight-tracker.git
+cd opensky-flight-tracker
+
+# Démarrer tous les services (build automatique)
+docker-compose up -d
+
+# Ou avec le Makefile
+make up
+```
+
+**Accès :**
+- 📊 **Dashboard** : http://localhost:8501
+- 🔍 **Kafka UI** : http://localhost:8080
+
+**Commandes utiles :**
+```bash
+make logs              # Voir les logs
+make ps                # État des services
+make down              # Arrêter tout
+make restart           # Redémarrer
+make clean             # Nettoyer tout
+```
+
+📖 **Guide complet** : Consultez [DOCKER.md](DOCKER.md)
+
+**Images Docker Hub** :
+- 🐳 [zbelem001/opensky-producer](https://hub.docker.com/r/zbelem001/opensky-producer)
+- 🐳 [zbelem001/opensky-spark](https://hub.docker.com/r/zbelem001/opensky-spark)
+- 🐳 [zbelem001/opensky-dashboard](https://hub.docker.com/r/zbelem001/opensky-dashboard)
+
+---
+
+### Option 3 : Installation locale (Développement)
+
+#### Prérequis locaux
+
+- **Python 3.12+**
+- **Docker & Docker Compose** (pour Kafka uniquement)
+- **Java 17** (pour Spark)
+- Connexion internet (API OpenSky Network)
+
+#### 1. Préparer l'environnement
+
+```bash
+# Cloner le projet
+git clone https://github.com/zbelem001/opensky-flight-tracker.git
 cd opensky-flight-tracker
 
 # Créer l'environnement virtuel
@@ -42,17 +111,17 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Démarrer Kafka
+#### 2. Démarrer Kafka seulement
 
 ```bash
 # Lancer Kafka et Zookeeper avec Docker
-docker-compose up -d
+docker-compose up -d kafka zookeeper kafka-ui
 
 # Vérifier que les conteneurs tournent
 docker ps
 ```
 
-### 3. Lancer l'application (méthode automatique)
+#### 3. Lancer l'application (méthode automatique)
 
 ```bash
 # Tout en un seul script !
@@ -70,7 +139,7 @@ Le script `start.sh` lance automatiquement :
 
 **Arrêter :** Appuyez sur `Ctrl+C`
 
-### Alternative : Lancement manuel (3 terminaux)
+#### Alternative : Lancement manuel (3 terminaux)
 
 **Terminal 1 - Kafka Producer :**
 ```bash

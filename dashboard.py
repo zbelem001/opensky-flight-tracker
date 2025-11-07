@@ -56,7 +56,17 @@ st.markdown("""
 # ====================== CONSTANTES ======================
 DUBAI_LAT = 25.2532
 DUBAI_LON = 55.3657
-FLIGHTS_PATH = "/tmp/flights_data"
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime, timedelta
+import time
+import os
+import glob
+
+# Configuration des chemins - Support Docker et local
+FLIGHTS_PATH = os.getenv('FLIGHTS_DATA_PATH', '/tmp/flights_data')
 STATS_PATH = "/tmp/flight_statistics"
 
 # ====================== FONCTIONS CACHÉES ======================
