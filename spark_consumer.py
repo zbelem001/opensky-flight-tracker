@@ -8,6 +8,7 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import *
 import logging
 import os
+import shutil
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,6 +16,9 @@ logger = logging.getLogger(__name__)
 class FlightStreamProcessor:
     def __init__(self):
         """Initialise la session Spark avec les packages nécessaires"""
+        # Nettoyer les anciens fichiers au démarrage pour éviter les conflits
+        self.cleanup_old_data()
+        
         self.spark = SparkSession.builder \
             .appName("OpenSkyFlightProcessor") \
             .config("spark.jars.packages", 
@@ -37,6 +41,25 @@ class FlightStreamProcessor:
         
         self.spark.sparkContext.setLogLevel("WARN")
         logger.info("Session Spark initialisée")
+    
+    def cleanup_old_data(self):
+        """Nettoie les anciens fichiers Parquet et checkpoint au démarrage"""
+        data_path = os.getenv('FLIGHTS_DATA_PATH', '/tmp/flights_data')
+        checkpoint_path = os.getenv('CHECKPOINT_PATH', '/data/checkpoint')
+        
+        for path in [data_path, checkpoint_path]:
+            if os.path.exists(path):
+                try:
+                    logger.info(f"🧹 Nettoyage de {path}...")
+                    shutil.rmtree(path)
+                    logger.info(f"✅ {path} nettoyé avec succès")
+                except Exception as e:
+                    logger.warning(f"⚠️  Impossible de nettoyer {path}: {e}")
+        
+        # Recréer les répertoires
+        os.makedirs(data_path, exist_ok=True)
+        os.makedirs(checkpoint_path, exist_ok=True)
+        logger.info(f"📁 Répertoires créés: {data_path}, {checkpoint_path}")
     
     def define_schema(self):
         """Définit le schéma des données de vol"""

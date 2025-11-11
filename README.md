@@ -65,6 +65,13 @@ docker-compose up -d
 make up
 ```
 
+**🔄 Redémarrage propre (recommandé)** :
+```bash
+# Utiliser le script de nettoyage automatique
+./start-clean.sh
+```
+Ce script nettoie automatiquement les anciennes données et redémarre proprement.
+
 **Accès :**
 - 📊 **Dashboard** : http://localhost:8501
 - 🔍 **Kafka UI** : http://localhost:8080
@@ -306,16 +313,38 @@ rm -rf /tmp/checkpoint/* /tmp/flights_data
 
 ## 🔍 Dépannage
 
+
+---
+
+## 🔍 Dépannage
+
+### ⚠️ Pas de données après redémarrage (COURANT)
+
+**Symptôme** : Le dashboard ne montre pas de données après avoir redémarré Docker.
+
+**Cause** : Les anciennes données Parquet dans les volumes Docker créent des conflits de checkpoint.
+
+**✅ Solution automatique** :
+```bash
+# Utiliser le script de nettoyage
+./start-clean.sh
+```
+
+**Solution manuelle** :
+```bash
+# Arrêter et nettoyer les volumes
+docker-compose down
+docker volume rm opensky-flights-data opensky-checkpoint
+docker-compose up -d
+```
+
+**Note** : Le `spark_consumer.py` nettoie aussi automatiquement au démarrage, mais le script `start-clean.sh` est plus fiable.
+
 ### Kafka ne démarre pas
 
 ```bash
 # Redémarrer proprement
 docker-compose down -v
-docker-compose up -d
-
-# Vérifier les logs
-docker-compose logs kafka
-```
 
 ### Erreur Java avec Spark
 
