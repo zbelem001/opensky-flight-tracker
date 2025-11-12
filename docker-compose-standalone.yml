@@ -1,0 +1,132 @@
+version: '3.8'
+
+# ============================================
+# OpenSky Flight Tracker - Docker Compose
+# Images pré-construites depuis Docker Hub
+# Aucun build nécessaire !
+# ============================================
+
+services:
+  # Zookeeper - Coordination Kafka
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: opensky-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - opensky-network
+    restart: unless-stopped
+
+  # Kafka - Message Broker
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: opensky-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    networks:
+      - opensky-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # Kafka UI - Interface de monitoring
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: opensky-kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: opensky-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+    networks:
+      - opensky-network
+    restart: unless-stopped
+
+  # Producer - Collecte des vols depuis OpenSky API
+  # IMAGE PRÉ-CONSTRUITE depuis Docker Hub
+  producer:
+    image: zbelem001/opensky-producer:latest
+    container_name: opensky-producer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: flights-data
+      FETCH_INTERVAL: 30
+    networks:
+      - opensky-network
+    restart: unless-stopped
+
+  # Spark Consumer - Traitement streaming
+  # IMAGE PRÉ-CONSTRUITE depuis Docker Hub (avec nettoyage automatique)
+  spark-consumer:
+    image: zbelem001/opensky-spark:latest
+    container_name: opensky-spark
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: flights-data
+      FLIGHTS_DATA_PATH: /data/flights_data
+      CHECKPOINT_PATH: /data/checkpoint
+    volumes:
+      - flights-data:/data/flights_data
+      - spark-checkpoint:/data/checkpoint
+    networks:
+      - opensky-network
+    restart: unless-stopped
+
+  # Dashboard - Visualisation Streamlit
+  # IMAGE PRÉ-CONSTRUITE depuis Docker Hub
+  dashboard:
+    image: zbelem001/opensky-dashboard:latest
+    container_name: opensky-dashboard
+    depends_on:
+      - spark-consumer
+    ports:
+      - "8501:8501"
+    environment:
+      FLIGHTS_DATA_PATH: /data/flights_data
+    volumes:
+      - flights-data:/data/flights_data:ro
+    networks:
+      - opensky-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  opensky-network:
+    driver: bridge
+    name: opensky-network
+
+volumes:
+  flights-data:
+    name: opensky-flights-data
+  spark-checkpoint:
+    name: opensky-checkpoint

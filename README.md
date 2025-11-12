@@ -27,7 +27,31 @@ OpenSky API → Kafka Producer → Kafka Topic → Spark Streaming → Fichiers 
 
 ## 🚀 Installation & Démarrage
 
-### Option 1 : Docker Hub - Démarrage Ultra-Rapide ⚡ (Recommandé)
+### Option 0 : Sans cloner le repo - Le Plus Rapide ! 🚀 (Nouveau)
+
+**Aucun git clone nécessaire - Juste Docker !**
+
+```bash
+# 1. Créer un dossier et télécharger le docker-compose
+mkdir opensky-flight-tracker && cd opensky-flight-tracker
+curl -o docker-compose.yml https://raw.githubusercontent.com/zbelem001/opensky-flight-tracker/main/docker-compose-standalone.yml
+
+# 2. Lancer
+docker-compose up -d
+
+# 3. Ouvrir http://localhost:8501
+```
+
+✅ **Avantages** :
+- Pas besoin de cloner le repo
+- Juste un fichier docker-compose.yml
+- Images déjà sur Docker Hub
+
+📖 **Guide complet** : [INSTALLATION_SANS_GIT.md](INSTALLATION_SANS_GIT.md)
+
+---
+
+### Option 1 : Docker Hub - Démarrage avec le repo ⚡ (Recommandé pour développeurs)
 
 **Images pré-construites - Prêt en 30 secondes !**
 
@@ -36,14 +60,15 @@ OpenSky API → Kafka Producer → Kafka Topic → Spark Streaming → Fichiers 
 git clone https://github.com/zbelem001/opensky-flight-tracker.git
 cd opensky-flight-tracker
 
-# Démarrer avec les images Docker Hub (pas de build nécessaire !)
+# Télécharger les dernières images et démarrer
+docker-compose -f docker-compose.hub.yml pull
 docker-compose -f docker-compose.hub.yml up -d
 ```
 
 ✅ **Avantages** :
+- Accès au code source et documentation
 - Pas de build (gain de 5-10 minutes)
 - Images testées et validées
-- Fonctionne immédiatement
 
 📖 **Guide rapide** : [QUICKSTART_PROFESSOR.md](QUICKSTART_PROFESSOR.md)
 
