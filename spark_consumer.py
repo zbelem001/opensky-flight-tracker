@@ -45,7 +45,7 @@ class FlightStreamProcessor:
     def cleanup_old_data(self):
         """Nettoie les anciens fichiers Parquet et checkpoint au démarrage"""
         data_path = os.getenv('FLIGHTS_DATA_PATH', '/tmp/flights_data')
-        checkpoint_path = os.getenv('CHECKPOINT_PATH', '/data/checkpoint')
+        checkpoint_path = os.getenv('CHECKPOINT_PATH', '/tmp/checkpoint')
         
         for path in [data_path, checkpoint_path]:
             if os.path.exists(path):
@@ -170,8 +170,8 @@ class FlightStreamProcessor:
         if path is None:
             path = os.getenv('FLIGHTS_DATA_PATH', '/tmp/flights_data')
         
-        # Utiliser /data/checkpoint dans Docker
-        checkpoint_path = os.getenv('CHECKPOINT_PATH', f"/data/checkpoint/{path.split('/')[-1]}")
+        # Utiliser /tmp/checkpoint en local, /data/checkpoint dans Docker
+        checkpoint_path = os.getenv('CHECKPOINT_PATH', f"/tmp/checkpoint/{path.split('/')[-1]}")
         
         query = df \
             .writeStream \
